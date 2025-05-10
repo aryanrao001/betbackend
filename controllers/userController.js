@@ -51,74 +51,61 @@ const loginUser = async (req, res) => {
 
 
 
-
 const registerUser = async (req, res) => {
     try {
-        const { name, email, phone, password, referal, registerType } = req.body;
+        const { name, email, phone, password, referal } = req.body;
 
-        // Check if registerType is provided and valid
-        if (!registerType || (registerType !== 'email' && registerType !== 'phone')) {
-            return res.json({ success: false, message: "Please specify whether you want to register with email or phone." });
+        // Ensure at least one of email or phone is provided
+        if (!email && !phone) {
+            return res.json({ success: false, message: "Please provide either an email or phone number." });
         }
 
-        // Validate the provided field based on registerType
-        if (registerType === 'email') {
-            if (!email) {
-                return res.json({ success: false, message: "Email is required for registration." });
-            }
-            // Check if the email already exists
+        // Email registration flow
+        if (email) {
             const exists = await userModel.findOne({ email });
             if (exists) {
                 return res.json({ success: false, message: "A user already exists with this email." });
             }
-            // Validate email format
             if (!validator.isEmail(email)) {
                 return res.json({ success: false, message: "Please enter a valid email." });
             }
         }
 
-        if (registerType === 'phone') {
-            if (!phone) {
-                return res.json({ success: false, message: "Phone number is required for registration." });
-            }
-            // Check if the phone number already exists
+        // Phone registration flow
+        if (phone) {
             const exists = await userModel.findOne({ phone });
             if (exists) {
                 return res.json({ success: false, message: "A user already exists with this phone number." });
             }
         }
 
-        // Validate password strength
+        // Password validation
         if (password.length < 8) {
             return res.json({ success: false, message: "Please enter a strong password (at least 8 characters)." });
         }
 
-        // Hash the password
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new user
+        // Create new user object with both email and phone if both are provided
         const newUser = new userModel({
             name,
-            email: registerType === 'email' ? email : undefined,  // Only set email if registering via email
-            phone: registerType === 'phone' ? phone : undefined,  // Only set phone if registering via phone
+            email: email || undefined,
+            phone: phone || undefined,
             password: hashedPassword,
             referal,
         });
 
-        // Save user to the database
         const user = await newUser.save();
-
-        // Generate token
         const token = createToken(user._id);
 
-        // Return success response with token
         res.json({ success: true, message: "Registration successful", token });
 
     } catch (error) {
         console.log(error);
         res.json({ success: false, message: error.message });
     }
-}
+};
 
 export { registerUser,loginUser };
