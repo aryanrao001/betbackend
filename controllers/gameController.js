@@ -607,4 +607,5 @@ const sendTossResult = async (req, res) => {
 
 
 
+
 export { bet_placed , declareResult  , slotGameResult , slotGameResulttwo ,spinbet_placed , declareResultspin , sendTossResult };
