@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 import connectDB from './config/mongodb.js';
 import userRouter from './routes/userRouter.js';
@@ -9,17 +12,23 @@ import gameRoute from './routes/gameRouter.js';
 const app = express();
 const port = process.env.PORT || 4000;
 
-// Call the connectDB function to connect to MongoDB
+// Setup __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Connect to MongoDB
 connectDB();
 
-// Middlewares
+// Middleware
 app.use(express.json());
 app.use(cors());
 
+// Serve uploaded images
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-//All Routes
-app.use('/api/user',userRouter);
-app.use('/api/games',gameRoute);
+// Routes
+app.use('/api/user', userRouter);
+app.use('/api/games', gameRoute);
 
 app.get('/', (req, res) => {
   res.send("API Working");

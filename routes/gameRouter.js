@@ -11,4 +11,5 @@ gameRoute.post('/spinbetplace', spinbet_placed);
 gameRoute.get('/declarespinresult', declareResultspin);
 gameRoute.get('/tossresult',sendTossResult);
 
+
 export default gameRoute;

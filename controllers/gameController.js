@@ -64,7 +64,7 @@ const bet_placed = async (req , res) => {
 
 const declareResult = async (req, res) => {
   try {
-    const pendingBets = await tossModel.find({ status: 'pending' });
+    const pendingBets = await tossModel.find({status: 'pending'});
 
     if (pendingBets.length > 0) {
       let headsTotal = 0;
@@ -77,6 +77,11 @@ const declareResult = async (req, res) => {
           tailsTotal += bet.betAmount;
         }
       });
+
+      console.log(headsTotal);
+      console.log(tailsTotal);  
+      console.log(pendingBets);
+
 
       let result;
       if (headsTotal < tailsTotal) {
@@ -106,6 +111,8 @@ const declareResult = async (req, res) => {
         });
       }
 
+      console.log(result);
+
       const newResult = new tossResult({
         winningSide: result,
         result: result,    // 👈 ADDING THIS
@@ -131,6 +138,8 @@ const declareResult = async (req, res) => {
         createdAt: new Date(),
       });
 
+      console.log(newResult)
+
       await newResult.save();
 
       return res.status(200).json({
@@ -138,6 +147,7 @@ const declareResult = async (req, res) => {
         message: `Result declared successfully by random : ${result.toUpperCase()}`,
         result: result,
       });
+
     }
   } catch (error) {
     console.error("Error declaring toss result:", error);
@@ -152,7 +162,7 @@ const declareResult = async (req, res) => {
 
 
 // ==== Spin Game ==== //
-const winChance = 10;  // 10% win chance, can be customized from admin later.
+const winChance = 99;  // 10% win chance, can be customized from admin later.
 
 const calculateSlotResult = () => {
   const randomChance = Math.random() * 100;
@@ -331,6 +341,9 @@ const slotGameResulttwo = async (req, res) => {
     });
   }
 };
+
+
+
 
 
 
