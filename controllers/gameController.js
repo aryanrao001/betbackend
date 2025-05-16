@@ -619,6 +619,22 @@ const sendTossResult = async (req, res) => {
 
 
 
+const currentround = async(req, res)=>{
+  const now = new Date();
+  const seconds = now.getSeconds();
+  const currentRoundStart = new Date(now);
+  currentRoundStart.setSeconds( seconds - (seconds % 30 ));
+
+  const currentRoundEnd = new Date(currentRoundStart.getTime() + 30 * 1000);
+
+  res.json({
+    serverTime: now.toISOString(),
+    roundStart: currentRoundStart.toISOString(),
+    roundEnd: currentRoundEnd.toISOString(),
+  });
+
+}
 
 
-export { bet_placed , declareResult  , slotGameResult , slotGameResulttwo ,spinbet_placed , declareResultspin , sendTossResult };
+
+export { bet_placed , declareResult  , slotGameResult , slotGameResulttwo ,spinbet_placed , declareResultspin , sendTossResult , currentround };

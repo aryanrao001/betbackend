@@ -1,5 +1,5 @@
 import express from "express";
-import { bet_placed, declareResult, declareResultspin, sendTossResult, slotGameResult, slotGameResulttwo, spinbet_placed } from "../controllers/gameController.js";
+import { bet_placed, currentround, declareResult, declareResultspin, sendTossResult, slotGameResult, slotGameResulttwo, spinbet_placed } from "../controllers/gameController.js";
 
 const gameRoute = express.Router();
 
@@ -10,6 +10,7 @@ gameRoute.post('/slottwo',slotGameResulttwo);
 gameRoute.post('/spinbetplace', spinbet_placed);
 gameRoute.get('/declarespinresult', declareResultspin);
 gameRoute.get('/tossresult',sendTossResult);
+gameRoute.get('/currentround',currentround);
 
 
 export default gameRoute;
