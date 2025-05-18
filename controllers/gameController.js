@@ -13,152 +13,289 @@ import spinResult from "../models/spinResult.js";
 
 // ==== Toss Game ==== //
 
-const bet_placed = async (req , res) => {
-    try {
-        const { token , amount , userChoice } = req.body;
-        if(!token){
-            return res.json({success:false , message:" First Login In "});
-        }
-        let decoded;
-        try {
-            decoded = jwt.verify(token,process.env.JWT_SECRET);
-            console.log(decoded)
-        } catch (error) {
-            console.log(tokenError);
-            return res.json({success:false, message:"Invalid Login"})
-        }
-        const user_id = decoded.id;
-        const userData = await userModel.findById(user_id);
-        if(!userData){
-            return res.json({success:false, message:"User Not Found "})
-        }
-        const userName = userData.name;
-        if (!['heads', 'tails'].includes(userChoice)) {
-            return res.json({ success: false, message: "Invalid side. Choose 'heads' or 'tails'." });
-        }
-        if (userData.balance < amount) {
-            return res.json({ success: false, message: "Insufficient balance " });
-        }
+// const bet_placed = async (req , res) => {
+//     try {
+//         const { token , amount , userChoice } = req.body;
+//         if(!token){
+//             return res.json({success:false , message:" First Login In "});
+//         }
+//         let decoded;
+//         try {
+//             decoded = jwt.verify(token,process.env.JWT_SECRET);
+//             console.log(decoded)
+//         } catch (error) {
+//             console.log(tokenError);
+//             return res.json({success:false, message:"Invalid Login"})
+//         }
+//         const user_id = decoded.id;
+//         const userData = await userModel.findById(user_id);
+//         if(!userData){
+//             return res.json({success:false, message:"User Not Found "})
+//         }
+//         const userName = userData.name;
+//         if (!['heads', 'tails'].includes(userChoice)) {
+//             return res.json({ success: false, message: "Invalid side. Choose 'heads' or 'tails'." });
+//         }
+//         if (userData.balance < amount) {
+//             return res.json({ success: false, message: "Insufficient balance " });
+//         }
 
-        userData.balance -= amount;
-        await userData.save();
+//         userData.balance -= amount;
+//         await userData.save();
 
-        const newbet = await tossModel.create({
-            userId:user_id,
-            userName:userName,
-            betAmount:amount,
-            chosenSide:userChoice
-        });
+//         const newbet = await tossModel.create({
+//             userId:user_id,
+//             userName:userName,
+//             betAmount:amount,
+//             chosenSide:userChoice
+//         });
 
-        res.json({ success: true, message: "Bet placed successfully", betId: newbet._id });
-
-
-    } catch (error) {
-        console.log(error);
-    }
-}
+//         res.json({ success: true, message: "Bet placed successfully", betId: newbet._id });
 
 
-// ==== Toss Game ==== //
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
 
 
-const declareResult = async (req, res) => {
+// // ==== Toss Game ==== //
+
+
+// const declareResult = async (req, res) => {
+//   try {
+//     const pendingBets = await tossModel.find({status: 'pending'});
+
+//     if (pendingBets.length > 0) {
+//       let headsTotal = 0;
+//       let tailsTotal = 0;
+
+//       pendingBets.forEach(bet => {
+//         if (bet.selectedItem === 'heads') {
+//           headsTotal += bet.betAmount;
+//         } else if (bet.selectedItem === 'tails') {
+//           tailsTotal += bet.betAmount;
+//         }
+//       });
+
+//       console.log(headsTotal);
+//       console.log(tailsTotal);  
+//       console.log(pendingBets);
+
+
+//       let result;
+//       if (headsTotal < tailsTotal) {
+//         result = "heads";
+//       } else {
+//         result = "tails";
+//       }
+
+//       for (const bet of pendingBets) {
+//         const isWin = bet.selectedItem === result;
+//         const statusUpdate = isWin ? "won" : "lost";
+      
+//         if (isWin) {
+//           const user = await userModel.findById(bet.userId);
+//           if (user) {
+//             user.balance += bet.betAmount * 2;
+//             await user.save();
+//           }
+//         }
+      
+//         await tossModel.findByIdAndUpdate(bet._id, {
+//           $set: {
+//             status: statusUpdate,
+//             resultSide: result,
+//             resolvedAt: new Date(),
+//           }
+//         });
+//       }
+
+//       console.log(result);
+
+//       const newResult = new tossResult({
+//         winningSide: result,
+//         result: result,    // 👈 ADDING THIS
+//         createdAt: new Date(),
+//       });
+
+//       await newResult.save();
+
+//       return res.status(200).json({
+//         success: true,
+//         message: `Result declared successfully by bets: ${result.toUpperCase()}`,
+//         result: result,
+//       });
+
+//     } else {
+//       const outcomes = ["heads", "tails"];
+//       const randomIndex = Math.floor(Math.random() * outcomes.length);
+//       const result = outcomes[randomIndex];
+
+//       const newResult = new tossResult({
+//         winningSide: result,
+//         result: result,    // 👈 ADDING THIS
+//         createdAt: new Date(),
+//       });
+
+//       console.log(newResult)
+
+//       await newResult.save();
+
+//       return res.status(200).json({
+//         success: true,
+//         message: `Result declared successfully by random : ${result.toUpperCase()}`,
+//         result: result,
+//       });
+
+//     }
+//   } catch (error) {
+//     console.error("Error declaring toss result:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server Error in declaring result",
+//     });
+//   }
+// };
+
+
+
+const bet_placed = async (req, res) => {
   try {
-    const pendingBets = await tossModel.find({status: 'pending'});
+    const { token, amount, userChoice } = req.body;
 
-    if (pendingBets.length > 0) {
-      let headsTotal = 0;
-      let tailsTotal = 0;
-
-      pendingBets.forEach(bet => {
-        if (bet.selectedItem === 'heads') {
-          headsTotal += bet.betAmount;
-        } else if (bet.selectedItem === 'tails') {
-          tailsTotal += bet.betAmount;
-        }
-      });
-
-      console.log(headsTotal);
-      console.log(tailsTotal);  
-      console.log(pendingBets);
-
-
-      let result;
-      if (headsTotal < tailsTotal) {
-        result = "heads";
-      } else {
-        result = "tails";
-      }
-
-      for (const bet of pendingBets) {
-        const isWin = bet.selectedItem === result;
-        const statusUpdate = isWin ? "won" : "lost";
-      
-        if (isWin) {
-          const user = await userModel.findById(bet.userId);
-          if (user) {
-            user.balance += bet.betAmount * 2;
-            await user.save();
-          }
-        }
-      
-        await tossModel.findByIdAndUpdate(bet._id, {
-          $set: {
-            status: statusUpdate,
-            resultSide: result,
-            resolvedAt: new Date(),
-          }
-        });
-      }
-
-      console.log(result);
-
-      const newResult = new tossResult({
-        winningSide: result,
-        result: result,    // 👈 ADDING THIS
-        createdAt: new Date(),
-      });
-
-      await newResult.save();
-
-      return res.status(200).json({
-        success: true,
-        message: `Result declared successfully by bets: ${result.toUpperCase()}`,
-        result: result,
-      });
-
-    } else {
-      const outcomes = ["heads", "tails"];
-      const randomIndex = Math.floor(Math.random() * outcomes.length);
-      const result = outcomes[randomIndex];
-
-      const newResult = new tossResult({
-        winningSide: result,
-        result: result,    // 👈 ADDING THIS
-        createdAt: new Date(),
-      });
-
-      console.log(newResult)
-
-      await newResult.save();
-
-      return res.status(200).json({
-        success: true,
-        message: `Result declared successfully by random : ${result.toUpperCase()}`,
-        result: result,
-      });
-
+    if (!token) {
+      return res.json({ success: false, message: "First login in" });
     }
-  } catch (error) {
-    console.error("Error declaring toss result:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server Error in declaring result",
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.json({ success: false, message: "Invalid token" });
+    }
+
+    const user_id = decoded.id;
+    const userData = await userModel.findById(user_id);
+
+    if (!userData) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    const userName = userData.name;
+
+    if (!['heads', 'tails'].includes(userChoice)) {
+      return res.json({ success: false, message: "Invalid choice. Choose 'heads' or 'tails'." });
+    }
+
+    if (userData.balance < amount) {
+      return res.json({ success: false, message: "Insufficient balance" });
+    }
+
+    // Deduct balance
+    userData.balance -= amount;
+    await userData.save();
+
+    // Create new bet
+    const newBet = await tossModel.create({
+      userId: user_id,
+      userName: userName,
+      betAmount: amount,
+      selectedItem: userChoice, // Use consistent key name
+      status: 'pending'
     });
+
+    return res.json({ success: true, message: "Bet placed successfully", betId: newBet._id });
+
+  } catch (error) {
+    console.error("Error placing bet:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 
+
+
+
+// ====== DECLARE RESULT ======
+const getBiasedResult = (userChoice, bias = 0.6) => {
+  const rand = Math.random();
+  return rand < bias ? userChoice : (userChoice === 'heads' ? 'tails' : 'heads');
+};
+const declareResult = async (req, res) => {
+  try {
+    const cutoffTime = new Date(Date.now() - 20000); // 20 seconds ago
+    const pendingBets = await tossModel.find({ 
+      status: 'pending', 
+      createdAt: { $lte: cutoffTime } 
+    });
+
+    console.log(`🕒 Found ${pendingBets.length} pending bets`);
+
+    let result;
+
+    if (pendingBets.length > 1) {
+      let headsTotal = 0;
+      let tailsTotal = 0;
+
+      pendingBets.forEach(bet => {
+        if (bet.chosenSide === 'heads') headsTotal += bet.betAmount;
+        else if (bet.chosenSide === 'tails') tailsTotal += bet.betAmount;
+      });
+
+      result = headsTotal < tailsTotal ? 'heads' : 'tails';
+
+    } else if (pendingBets.length === 1) {
+      const userBet = pendingBets[0];
+      result = getBiasedResult(userBet.chosenSide);
+      console.log(`🎯 One user played. User selected: ${userBet.chosenSide}, Biased result declared: ${result}`);
+    } else {
+      const outcomes = ['heads', 'tails'];
+      result = outcomes[Math.floor(Math.random() * outcomes.length)];
+      console.log(`⚠️ No bets. Declared random result: ${result}`);
+    }
+
+    for (const bet of pendingBets) {
+      const isWin = bet.chosenSide === result;
+      const statusUpdate = isWin ? 'won' : 'lost';
+
+      if (isWin) {
+        const user = await userModel.findById(bet.userId);
+        if (user) {
+          user.balance += bet.betAmount * 2;
+          await user.save();
+        }
+      }
+
+      await tossModel.findByIdAndUpdate(bet._id, {
+        $set: {
+          status: statusUpdate,
+          resultSide: result,
+          resolvedAt: new Date(),
+        }
+      });
+    }
+
+    await new tossResult({
+      winningSide: result,
+      result: result,
+      createdAt: new Date()
+    }).save();
+
+    return res.status(200).json({
+      success: true,
+      message: `✅ Result declared successfully: ${result.toUpperCase()}`,
+      result
+    });
+
+  } catch (error) {
+    console.error("❌ Error declaring toss result:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error in declaring result"
+    });
+  }
+};
 
 
 // ==== Spin Game ==== //
@@ -608,12 +745,11 @@ const declareResultspin = async (req, res) => {
 const sendTossResult = async (req, res) => {
   try {
     // Get the 10 most recent bets sorted by creation time (assuming you have timestamps)
-    const newBets = await tossResult.find().sort({ createdAt: -1 }).limit(10);
-
+    const newBets = await tossResult.find().sort({ createdAt:-1}).limit(10);
     return res.status(200).json({ success: true, bets: newBets });
   } catch (error) {
     console.error("Error in sendTossResult:", error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({ success:false,message: "Internal Server Error" });
   }
 };
 

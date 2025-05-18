@@ -5,7 +5,7 @@ const tossSchema = new mongoose.Schema({
     userName: {type:String , required:true},
     betAmount: { type: Number, required: true },
     chosenSide: { type: String, enum: ['heads', 'tails'], required: true },
-    status: { type: String, enum: ['pending', 'won', 'lost'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'win', 'lose'], default: 'pending' },
     resultSide: { type: String, enum: ['heads', 'tails'], default: null },
     createdAt: { type: Date, default: Date.now },
     resolvedAt: { type: Date }
